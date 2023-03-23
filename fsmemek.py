@@ -1,9 +1,12 @@
 import sys
+from collections import namedtuple
 import re
 
 
-STATES = []
-EVENTS = []
+STATES = set()
+EVENTS = set()
+
+StateAndEvent = namedtuple('StateAndEvent', ['state', 'event'])
 
 def get_state_event_from_func_decl(line: str):
     #any function called on_event
@@ -11,16 +14,17 @@ def get_state_event_from_func_decl(line: str):
     if match:
         state = re.split(r'&| ', match.group(1))[0]
         event = re.split(r'&| ', match.group(2))[0]
-        print(f"state is {state}")
-        print(f"event is {event}")
-        return True
+        return StateAndEvent(state, event)
+    return None
 
 def parse(file_name: str):
     with open(file_name, 'r') as f:
         all_lines = f.readlines()
         for i, line in enumerate(all_lines):
-            if get_state_event_from_func_decl(line):
-                pass
+            if stateAndEvent := get_state_event_from_func_decl(line):
+                STATES.add(stateAndEvent.state)
+                EVENTS.add(stateAndEvent.event)
+                
 
 
 def error(msg):
@@ -32,6 +36,11 @@ def error(msg):
 FILE = sys.argv[1] if len(sys.argv) > 1 else error("no file specified")
 print(f"parsing FILE: {FILE}")
 parse(FILE)
+
+for state in STATES:
+    print(state)
+for event in EVENTS:
+    print(event)
 
 
 
