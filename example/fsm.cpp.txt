@@ -1,0 +1,31 @@
+
+
+
+
+
+return_state class::on_event(STATE_A s_a, EVENT_A& e_a) {
+
+   return STATE_b{}; 
+}
+
+
+return_state class::on_event(STATE_A& s_a, EVENT_B& e_a)
+{
+   return something > 0 ? std::nullopt : STATE_B{};
+}
+
+
+return_state class::on_event(STATE_B& s_a, EVENT_A& e_a)
+{
+   if (some_condition) {
+      return STATE_A{};
+   } 
+
+   return STATE_C{};
+}
+
+
+
+
+
+
