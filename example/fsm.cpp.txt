@@ -5,7 +5,7 @@
 
 return_state class::on_event(STATE_A s_a, EVENT_A& e_a) {
 
-   return STATE_b{}; 
+   return STATE_b{};
 }
 
 
@@ -19,7 +19,16 @@ return_state class::on_event(STATE_B& s_a, EVENT_A& e_a)
 {
    if (some_condition) {
       return STATE_A{};
-   } 
+   }
+
+   if (some_condition &&
+       (some_other_condition)) {
+      return STATE_A{};
+   } else if (some_other_condition) {
+      return STATE_A{};
+   } else {
+      return STATE_A{};
+   }
 
    return STATE_C{};
 }
