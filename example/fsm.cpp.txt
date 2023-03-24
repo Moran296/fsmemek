@@ -37,6 +37,11 @@ return_state class::on_event(STATE_A& s_a, EVENT_B& e_a)
 return_state class::on_event(STATE_B& s_a, EVENT_A& e_a)
 {
 
+   if (some_irrelevant) {
+      ......
+      .....
+   }
+
    if (some_condition) {
       if (inside)
       {

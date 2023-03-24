@@ -86,6 +86,15 @@ class DecisionNode:
         self.parent = parent
         self.condition = condition
 
+    def returns(self):
+        for child in self.children:
+            if isinstance(child, ReturnedState):
+                return True
+            elif isinstance(child, DecisionNode) and child.returns():
+                return True
+        return False
+
+
     def print(self):
         if len(self.children) == 0:
             return
@@ -143,8 +152,8 @@ def CreateDecisionTree(clause, root):
 
             new_node = DecisionNode(parent=root, condition=condition)
             CreateDecisionTree(new_clause, new_node)
-            #if new_node.returns():
-            root.children.append(new_node)
+            if new_node.returns():
+                root.children.append(new_node)
 
 class OnEventFunc:
     def __init__(self, clause, state, event):
