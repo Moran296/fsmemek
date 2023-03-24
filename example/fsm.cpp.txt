@@ -1,11 +1,30 @@
+return_state class::on_event(STATE_A s_a, EVENT_A& e_a) {
 
+   if(oneliner)
+      return STATE_ONE_LINER{};
 
+   return STATE_ONE_LINER2{}
+}
 
+return_state class::on_event(STATE_B& s_a, EVENT_A& e_a)
+{
+   if (some_condition) {
+      return STATE_A{};
+   }
+
+   if (some_condition_more && (some_other_condition)) {
+      return STATE_A{};
+   } else if (some_other_condition_number) {
+      return STATE_B{};
+   } else {
+      return STATE_C{};
+   }
+}
 
 
 return_state class::on_event(STATE_A s_a, EVENT_A& e_a) {
 
-   return STATE_b{};
+   return STATE_B{};
 }
 
 
@@ -17,20 +36,15 @@ return_state class::on_event(STATE_A& s_a, EVENT_B& e_a)
 
 return_state class::on_event(STATE_B& s_a, EVENT_A& e_a)
 {
+
    if (some_condition) {
-      return STATE_A{};
-   }
+      if (inside)
+      {
+         return STATE_A{};
+      }
 
-   if (some_condition &&
-       (some_other_condition)) {
-      return STATE_A{};
-   } else if (some_other_condition) {
-      return STATE_A{};
-   } else {
-      return STATE_A{};
+      return STATE_B{};
    }
-
-   return STATE_C{};
 }
 
 
