@@ -54,7 +54,19 @@ return_state class::on_event(STATE_B& s_a, EVENT_A& e_a)
    }
 }
 
+some SOME::on_event(STATE_A &, const EVENT_CASE &state) {
 
+    switch (something) {
+    case big:
+        return STATE_C{};
+    case small:
+        return STATE_D{};
+
+    default:
+      return STATE_A{};
+    }
+
+}
 
 
 

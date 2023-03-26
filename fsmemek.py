@@ -133,6 +133,34 @@ def handle_return_statement(node, lines):
     else:
         node.children.append(ReturnedState(get_state_from_return_statement(line.strip())))
 
+def handle_switch_case(node, lines, switch_line):
+    switch_match = re.match(r'switch.*\((?P<condition>.*)\)', switch_line.strip())
+    if switch_match is None:
+        return None
+
+    switch_var = switch_match.group('condition').strip()
+
+    current_case_node = None
+
+    for i, line in enumerate(lines):
+        if line.strip().startswith('default'):
+            current_case_node = "DEFAULT"
+
+        elif line.strip().startswith('case'):
+            case_match = re.match(r'case (?P<state>[a-zA-Z0-9_]*):', line.strip())
+            if case_match:
+                case_condition = switch_var + " == " + case_match.group('state')
+                current_case_node = DecisionNode(parent=node, condition=case_condition)
+
+        elif line.strip().startswith('return '):
+            if current_case_node is None:
+                print("SOMETHING IS WRONG - SHOULD BE IN CASE")
+            elif current_case_node == "DEFAULT":
+                handle_return_statement(node, lines[i:])
+            else:
+                handle_return_statement(current_case_node, lines[i:])
+                node.children.append(current_case_node)
+
 
 def CreateDecisionTree(clause, root):
     number_of_lines_to_skip = 0
@@ -158,6 +186,12 @@ def CreateDecisionTree(clause, root):
             CreateDecisionTree(new_clause, new_node)
             if new_node.returns():
                 root.children.append(new_node)
+
+        if line.strip().startswith("switch (") or line.strip().startswith("switch("):
+            new_clause = get_clause(clause[i:])
+            handle_switch_case(root, new_clause, line)
+            number_of_lines_to_skip = len(new_clause) - 1
+
 
 class OnEventFunc:
     def __init__(self, clause, state, event):
