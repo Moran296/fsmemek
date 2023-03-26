@@ -73,6 +73,23 @@ def get_clause(lines):
     else:
         return None
 
+# assumes a function ends with ') {'
+# assumes that return looks like 'return function(...);'
+def get_spesific_function_clause(function_line):
+    function_name_match = re.match(r'return (?P<function_name>.*)\(.*\);', function_line.strip())
+    if function_name_match is None:
+        return None
+
+    function_name = function_name_match.group('function_name').strip()
+
+    for i, line in enumerate(LINES):
+        #is the line a function declaration?
+        func_match = re.match(r'.* .*\:\:.*\(.*\) {', line.strip())
+        if function_name in line and func_match:
+            clause = get_clause(LINES[i:])
+            return clause
+
+    return None
 
 class ReturnedState:
     def __init__(self, state) -> None:
@@ -130,6 +147,11 @@ def handle_return_statement(node, lines):
         new_node.children.append(ReturnedState(ret_1))
         node.children.append(new_node)
         node.children.append(ReturnedState(ret_2))
+    elif "STATE_" not in line and line.strip().endswith(');'):
+        cl = get_spesific_function_clause(line)
+        if cl is None:
+            print(f"return statement not handled: {line}")
+        CreateDecisionTree(cl, node)
     else:
         node.children.append(ReturnedState(get_state_from_return_statement(line.strip())))
 
@@ -220,34 +242,29 @@ def get_state_event_from_func_decl(line: str):
         return StateAndEvent(state, event)
     return None
 
-def parse(file_name: str):
-    with open(file_name, 'r') as f:
-        all_lines = f.readlines()
-        for i, line in enumerate(all_lines):
-            if stateAndEvent := get_state_event_from_func_decl(line):
-                STATES.add(stateAndEvent.state)
-                EVENTS.add(stateAndEvent.event)
-                print(f"on_event({stateAndEvent.state}, {stateAndEvent.event})")
-                f = OnEventFunc(get_clause(all_lines[i:]), stateAndEvent.state, stateAndEvent.event)
-                f.root.print()
-                print("-------------------------\n\n\n")
-
-
+def parse():
+    for i, line in enumerate(LINES):
+        if stateAndEvent := get_state_event_from_func_decl(line):
+            STATES.add(stateAndEvent.state)
+            EVENTS.add(stateAndEvent.event)
+            print(f"on_event({stateAndEvent.state}, {stateAndEvent.event})")
+            f = OnEventFunc(get_clause(LINES[i:]), stateAndEvent.state, stateAndEvent.event)
+            f.root.print()
+            print("-------------------------\n\n\n")
 
 def error(msg):
     print(msg)
     sys.exit(1)
 
-
 # get file from first arg or exit
 FILE = sys.argv[1] if len(sys.argv) > 1 else error("no file specified")
-print(f"parsing FILE: {FILE}")
-parse(FILE)
+LINES = None
+with open(FILE, 'r') as f:
+    LINES = f.readlines()
+    print(f"parsing FILE: {FILE}")
+    parse()
 
-for state in STATES:
-    print(state)
-for event in EVENTS:
-    print(event)
+
 
 
 
