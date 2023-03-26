@@ -3,7 +3,9 @@ return_state class::on_event(STATE_A s_a, EVENT_A& e_a) {
    if(oneliner)
       return STATE_ONE_LINER{};
 
-   return STATE_ONE_LINER2{}
+   return SOMETHING_TRENARY
+                           ? STATE_A{}
+                           : STATE_B{};
 }
 
 return_state class::on_event(STATE_B& s_a, EVENT_A& e_a)

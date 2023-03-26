@@ -81,7 +81,7 @@ class ReturnedState:
         return self.state if self.state else "NONE"
 
 class DecisionNode:
-    def __init__(self, parent, condition, is_trenary=False):
+    def __init__(self, parent, condition):
         self.children = [] # list of DecisionNode or States (str)
         self.parent = parent
         self.condition = condition
@@ -95,21 +95,21 @@ class DecisionNode:
         return False
 
 
-    def print(self):
+    def print(self, indet=0):
         if len(self.children) == 0:
             return
 
         for child in self.children:
             if isinstance(child, DecisionNode) and child.condition is not None:
                 print (f"IF {child.condition}")
-                child.print()
+                child.print(indet=indet+2)
                 print ("ELSE")
             else:
                 print(child)
 
 
 def get_state_from_return_statement(line) :
-    if match := re.match(r'.*(?P<state>STATE_.*)\s*\{.*', line.strip()):
+    if match := re.match(r'.*(?P<state>STATE_[a-zA-Z0-9_]*)[{(].*', line.strip()):
         return match.group('state').strip()
     elif "nullopt" in line:
         return "NULLOPT"
@@ -117,8 +117,12 @@ def get_state_from_return_statement(line) :
     return None
 
 
-def handle_return_statement(node, line):
-    trenary_match = re.match(r'return (?P<condition>.*)\?(?P<ret_1>.*):(?P<ret_2>.*);', line.strip())
+def handle_return_statement(node, lines):
+
+    line = lines[0] if lines[0].strip().endswith(';') else get_complete_statement(lines)
+    line = " ".join(line.strip().replace('\n', ' ').split())
+
+    trenary_match = re.match(r'return (?P<condition>.*) \? (?P<ret_1>.*) \: (?P<ret_2>.*);', line.strip())
     if trenary_match:
         new_node = DecisionNode(parent=node, condition=trenary_match.group('condition').strip())
         ret_1 = get_state_from_return_statement(trenary_match.group('ret_1').strip())
@@ -139,7 +143,7 @@ def CreateDecisionTree(clause, root):
             continue
 
         if line.strip().startswith('return '):
-            handle_return_statement(root, line)
+            handle_return_statement(root, clause[i:])
 
         if line.strip().startswith('if (') or line.strip().startswith('if(') or 'else if (' in  line.strip() or 'else if(' in line.strip():
             #should never be none!
@@ -166,7 +170,7 @@ class OnEventFunc:
 
 def get_state_event_from_func_decl(line: str):
     #any function called on_event
-    match = re.match(r'.*on_event\s*\((.*STATE_.*&*), (.*EVENT_.*&*)\).*', line)
+    match = re.match(r'.*on_event\s*\((.*STATE_.*&*), .*(.*EVENT_.*&*)\).*', line)
     if match:
         state = re.split(r'&| ', match.group(1))[0]
         event = re.split(r'&| ', match.group(2))[0]
@@ -180,6 +184,7 @@ def parse(file_name: str):
             if stateAndEvent := get_state_event_from_func_decl(line):
                 STATES.add(stateAndEvent.state)
                 EVENTS.add(stateAndEvent.event)
+                print(f"on_event({stateAndEvent.state}, {stateAndEvent.event})")
                 f = OnEventFunc(get_clause(all_lines[i:]), stateAndEvent.state, stateAndEvent.event)
                 f.root.print()
                 print("-------------------------\n\n\n")
@@ -192,8 +197,7 @@ def error(msg):
 
 
 # get file from first arg or exit
-#FILE = sys.argv[1] if len(sys.argv) > 1 else error("no file specified")
-FILE = "./example/fsm.cpp.txt"
+FILE = sys.argv[1] if len(sys.argv) > 1 else error("no file specified")
 print(f"parsing FILE: {FILE}")
 parse(FILE)
 
