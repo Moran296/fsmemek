@@ -141,15 +141,19 @@ def handle_switch_case(node, lines, switch_line):
     switch_var = switch_match.group('condition').strip()
 
     current_case_node = None
+    last_falltrough_conditions = []
 
     for i, line in enumerate(lines):
         if line.strip().startswith('default'):
             current_case_node = "DEFAULT"
 
         elif line.strip().startswith('case'):
-            case_match = re.match(r'case (?P<state>[a-zA-Z0-9_]*):', line.strip())
+            case_match = re.match(r'case\s?(?P<state>.*):', line.strip())
             if case_match:
                 case_condition = switch_var + " == " + case_match.group('state')
+                if len(last_falltrough_conditions) > 0:
+                    case_condition = " || ".join(last_falltrough_conditions) + " || " + case_condition
+
                 current_case_node = DecisionNode(parent=node, condition=case_condition)
 
         elif line.strip().startswith('return '):
@@ -160,6 +164,11 @@ def handle_switch_case(node, lines, switch_line):
             else:
                 handle_return_statement(current_case_node, lines[i:])
                 node.children.append(current_case_node)
+
+        if "[[fallthrough]]" in line:
+            last_falltrough_conditions.append(current_case_node.condition)
+        else:
+            last_falltrough_conditions = []
 
 
 def CreateDecisionTree(clause, root):
