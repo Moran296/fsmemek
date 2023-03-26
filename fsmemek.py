@@ -95,7 +95,7 @@ class ReturnedState:
     def __init__(self, state) -> None:
         self.state = state
     def __str__(self) -> str:
-        return self.state if self.state else "NONE"
+        return self.state if self.state else "*UNKNOWN RETURN VALUE*"
 
 class DecisionNode:
     def __init__(self, parent, condition):
