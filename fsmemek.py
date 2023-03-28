@@ -3,8 +3,7 @@ from collections import namedtuple
 import re
 
 
-STATES = set()
-EVENTS = set()
+CONDITION_ID = 1
 
 StateAndEvent = namedtuple('StateAndEvent', ['state', 'event'])
 
@@ -102,6 +101,9 @@ class DecisionNode:
         self.children = [] # list of DecisionNode or States (str)
         self.parent = parent
         self.condition = condition
+        global CONDITION_ID
+        self.id = f"{CONDITION_ID}" if condition else "0"
+        CONDITION_ID = CONDITION_ID + 1 if condition else CONDITION_ID
 
     def returns(self):
         for child in self.children:
@@ -112,17 +114,49 @@ class DecisionNode:
         return False
 
 
-    def print(self, indet=0):
+    def print(self):
         if len(self.children) == 0:
             return
 
         for child in self.children:
             if isinstance(child, DecisionNode) and child.condition is not None:
                 print (f"IF {child.condition}")
-                child.print(indet=indet+2)
+                child.print()
                 print ("ELSE")
             else:
                 print(child)
+
+    def declare_ids(self, file):
+        if self.id != "0":
+            file.write(f"state {self.id} <<choice>>\n")
+        for child in self.children:
+            if isinstance(child, DecisionNode):
+                child.declare_ids(file)
+
+    def print_uml(self, file, orginal_state):
+        if len(self.children) == 0:
+            return
+
+        state = self.parent.state if isinstance(self.parent, OnEventFunc) else self.id
+        event = self.parent.event if isinstance(self.parent, OnEventFunc) else self.condition
+        def target_id(i):
+            if isinstance(self.children[i], ReturnedState):
+                if self.children[i].state == "NULLOPT":
+                    return orginal_state
+                else :
+                    return self.children[i].state
+            else:
+                return self.children[i].id
+
+        for i in range(len(self.children)):
+                target = target_id(i)
+                if i > 0:
+                    file.write(f"{state} --> {target} : else..\n")
+                else:
+                    file.write(f"{state} --> {target} : {event}\n")
+                state = target
+                if isinstance(self.children[i], DecisionNode):
+                    self.children[i].print_uml(file, orginal_state)
 
 
 def get_state_from_return_statement(line) :
@@ -229,8 +263,14 @@ class OnEventFunc:
         self.state = state
         self.event = event
         self.clause = clause
-        self.root = DecisionNode(parent=None, condition=None)
+        self.root = DecisionNode(parent=self, condition=None)
         CreateDecisionTree(self.clause, self.root)
+
+    def declare(self, f):
+        self.root.declare_ids(f)
+
+    def print_uml(self, f):
+        self.root.print_uml(f, self.state)
 
 
 def get_state_event_from_func_decl(line: str):
@@ -243,14 +283,27 @@ def get_state_event_from_func_decl(line: str):
     return None
 
 def parse():
+    functions = []
+
     for i, line in enumerate(LINES):
         if stateAndEvent := get_state_event_from_func_decl(line):
-            STATES.add(stateAndEvent.state)
-            EVENTS.add(stateAndEvent.event)
             print(f"on_event({stateAndEvent.state}, {stateAndEvent.event})")
             f = OnEventFunc(get_clause(LINES[i:]), stateAndEvent.state, stateAndEvent.event)
-            f.root.print()
-            print("-------------------------\n\n\n")
+            if f is not None:
+                functions.append(f)
+    return functions
+
+def output_uml(file_name, functions):
+    with open(file_name, "w") as f:
+        f.write("@startuml\n")
+        for func in functions:
+            func.declare(f)
+            f.write("\n\n")
+        for func in functions:
+            func.print_uml(f)
+            f.write("\n")
+
+        f.write("\n@enduml")
 
 def error(msg):
     print(msg)
@@ -262,7 +315,8 @@ LINES = None
 with open(FILE, 'r') as f:
     LINES = f.readlines()
     print(f"parsing FILE: {FILE}")
-    parse()
+    functions = parse()
+    output_uml(f"{FILE}_output.uml", functions)
 
 
 
