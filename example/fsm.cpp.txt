@@ -64,6 +64,8 @@ some SOME::on_event(STATE_A &, const EVENT_CASE &state) {
     case medium:
         [[fallthrough]]
     case small:
+        [[fallthrough]]
+    case tiny:
         return STATE_D{};
 
     default:

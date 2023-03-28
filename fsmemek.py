@@ -208,9 +208,11 @@ def handle_switch_case(node, lines, switch_line):
             if case_match:
                 case_condition = switch_var + " == " + case_match.group('state')
                 if len(last_falltrough_conditions) > 0:
-                    case_condition = " || ".join(last_falltrough_conditions) + " || " + case_condition
+                    cases = [case.split()[-1] for case in last_falltrough_conditions]
+                    case_condition = switch_var + " == " + " || ".join(cases) + " || " + case_match.group('state')
 
                 current_case_node = DecisionNode(parent=node, condition=case_condition)
+                continue
 
         elif line.strip().startswith('return '):
             if current_case_node is None:
