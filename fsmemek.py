@@ -4,6 +4,8 @@ import re
 
 
 CONDITION_ID = 1
+COLOR_INDEX = 0
+COLORS = ["#red", "#blue", "#green", "#orange", "#purple", "#pink", "#brown", "#grey", "#white", "#cyan", "#magenta", "#lime", "#olive", "#maroon", "#navy", "#teal", "#aqua", "#fuchsia", "#silver", "#gray", "#olive", "#yellowgreen", "#violet", "#turquoise", "#tomato", "#tan", "#steelblue", "#skyblue", "#sienna", "#seagreen", "#sandybrown", "#salmon", "#rosybrown", "#royalblue", "#orangered", "#orchid", "#olivedrab", "#navajowhite", "#moccasin", "#mistyrose", "#midnightblue", "#mediumvioletred", "#mediumturquoise", "#mediumspringgreen", "#mediumslateblue", "#mediumseagreen", "#mediumorchid", "#mediumblue", "#mediumaquamarine", "#maroon", "#lawngreen", "#khaki", "#indigo", "#hotpink", "#honeydew", "#greenyellow", "#green", "#gold", "#fuchsia", "#forestgreen", "#firebrick", "#dodgerblue", "#deeppink", "#darkviolet", "#darkturquoise", "#darkslategray", "#darkslateblue", "#darkseagreen", "#darkorchid", "#darkolivegreen", "#darkmagenta", "#darkkhaki", "#darkgreen", "#darkgoldenrod", "#darkcyan", "#darkblue", "#darkblue", "#cyan", "#crimson", "#cornflowerblue", "#coral", "#chocolate", "#chartreuse", "#cadetblue", "#burlywood", "#blueviolet", "#blue", "#blanchedalmond", "#bisque", "#beige", "#azure", "#aquamarine", "#aquamarine", "#antiquewhite", "#aliceblue", "#aqua", "#aquamarine", "#azure", "#beige", "#bisque", "#blanchedalmond", "#blue", "#blueviolet", "#burlywood", "#cadetblue", "#chartreuse", "#chocolate", "#coral", "#cornflowerblue", "#crimson", "#cyan", "#darkblue", "#darkblue", "#darkcyan", "#darkgolden"]
 
 StateAndEvent = namedtuple('StateAndEvent', ['state', 'event'])
 
@@ -137,8 +139,14 @@ class DecisionNode:
         if len(self.children) == 0:
             return
 
+        global COLORS
+        global COLOR_INDEX
+
         state = self.parent.state if isinstance(self.parent, OnEventFunc) else self.id
         event = self.parent.event if isinstance(self.parent, OnEventFunc) else self.condition
+        line = f"-[{COLORS[COLOR_INDEX]}]->"
+        bold_line = f"-[bold,{COLORS[COLOR_INDEX]}]->"
+
         def target_id(i):
             if isinstance(self.children[i], ReturnedState):
                 if self.children[i].state == "NULLOPT":
@@ -151,9 +159,12 @@ class DecisionNode:
         for i in range(len(self.children)):
                 target = target_id(i)
                 if i > 0:
-                    file.write(f"{state} --> {target} : else..\n")
+                    file.write(f"{state} {line} {target} : else..\n")
                 else:
-                    file.write(f"{state} --> {target} : {event}\n")
+                    if isinstance(self.parent, OnEventFunc):
+                        file.write(f"{state} {bold_line} {target} \nnote on link\n    {event}\nend note\n")
+                    else:
+                        file.write(f"{state} {line} {target} : {event}\n")
                 state = target
                 if isinstance(self.children[i], DecisionNode):
                     self.children[i].print_uml(file, orginal_state)
@@ -272,7 +283,11 @@ class OnEventFunc:
         self.root.declare_ids(f)
 
     def print_uml(self, f):
+        global COLORS
+        global COLOR_INDEX
+
         self.root.print_uml(f, self.state)
+        COLOR_INDEX = (COLOR_INDEX + 1) % len(COLORS)
 
 
 def get_state_event_from_func_decl(line: str):
@@ -318,7 +333,7 @@ with open(FILE, 'r') as f:
     LINES = f.readlines()
     print(f"parsing FILE: {FILE}")
     functions = parse()
-    output_uml(f"{FILE}_output.uml", functions)
+    output_uml(f"{FILE.replace('cpp', 'uml')}", functions)
 
 
 
