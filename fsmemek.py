@@ -5,7 +5,7 @@ import re
 
 CONDITION_ID = 1
 COLOR_INDEX = 0
-COLORS = ["#red", "#blue", "#green", "#orange", "#purple", "#pink", "#brown", "#grey", "#white", "#cyan", "#magenta", "#lime", "#olive", "#maroon", "#navy", "#teal", "#aqua", "#fuchsia", "#silver", "#gray", "#olive", "#yellowgreen", "#violet", "#turquoise", "#tomato", "#tan", "#steelblue", "#skyblue", "#sienna", "#seagreen", "#sandybrown", "#salmon", "#rosybrown", "#royalblue", "#orangered", "#orchid", "#olivedrab", "#navajowhite", "#moccasin", "#mistyrose", "#midnightblue", "#mediumvioletred", "#mediumturquoise", "#mediumspringgreen", "#mediumslateblue", "#mediumseagreen", "#mediumorchid", "#mediumblue", "#mediumaquamarine", "#maroon", "#lawngreen", "#khaki", "#indigo", "#hotpink", "#honeydew", "#greenyellow", "#green", "#gold", "#fuchsia", "#forestgreen", "#firebrick", "#dodgerblue", "#deeppink", "#darkviolet", "#darkturquoise", "#darkslategray", "#darkslateblue", "#darkseagreen", "#darkorchid", "#darkolivegreen", "#darkmagenta", "#darkkhaki", "#darkgreen", "#darkgoldenrod", "#darkcyan", "#darkblue", "#darkblue", "#cyan", "#crimson", "#cornflowerblue", "#coral", "#chocolate", "#chartreuse", "#cadetblue", "#burlywood", "#blueviolet", "#blue", "#blanchedalmond", "#bisque", "#beige", "#azure", "#aquamarine", "#aquamarine", "#antiquewhite", "#aliceblue", "#aqua", "#aquamarine", "#azure", "#beige", "#bisque", "#blanchedalmond", "#blue", "#blueviolet", "#burlywood", "#cadetblue", "#chartreuse", "#chocolate", "#coral", "#cornflowerblue", "#crimson", "#cyan", "#darkblue", "#darkblue", "#darkcyan", "#darkgolden"]
+COLORS = ["#orange", "#purple", "#pink", "#brown", "#grey", "#magenta", "#lime", "#olive", "#maroon", "#navy", "#teal", "#aqua", "#fuchsia", "#silver", "#gray", "#olive", "#yellowgreen", "#violet", "#turquoise", "#tomato", "#tan", "#steelblue", "#skyblue", "#sienna", "#seagreen", "#sandybrown", "#salmon", "#rosybrown", "#royalblue", "#orangered", "#orchid", "#olivedrab", "#navajowhite", "#moccasin", "#mistyrose", "#midnightblue", "#mediumvioletred", "#mediumturquoise", "#mediumspringgreen", "#mediumslateblue", "#mediumseagreen", "#mediumorchid", "#mediumblue", "#mediumaquamarine", "#maroon", "#lawngreen", "#khaki", "#indigo", "#hotpink", "#honeydew", "#greenyellow", "#green", "#gold", "#fuchsia", "#forestgreen", "#firebrick", "#dodgerblue", "#deeppink", "#darkviolet", "#darkturquoise", "#darkslategray", "#darkslateblue", "#darkseagreen", "#darkorchid", "#darkolivegreen", "#darkmagenta", "#darkkhaki", "#darkgreen", "#darkgoldenrod", "#darkcyan", "#darkblue", "#darkblue", "#cyan", "#crimson", "#cornflowerblue", "#coral", "#chocolate", "#chartreuse", "#cadetblue", "#burlywood", "#blueviolet", "#blue", "#blanchedalmond", "#bisque", "#beige", "#azure", "#aquamarine", "#aquamarine", "#antiquewhite", "#aliceblue", "#aqua", "#aquamarine", "#azure", "#beige", "#bisque", "#blanchedalmond", "#blue", "#blueviolet", "#burlywood", "#cadetblue", "#chartreuse", "#chocolate", "#coral", "#cornflowerblue", "#crimson", "#cyan", "#darkblue", "#darkblue", "#darkcyan", "#darkgolden"]
 
 StateAndEvent = namedtuple('StateAndEvent', ['state', 'event'])
 
@@ -131,6 +131,7 @@ class DecisionNode:
     def declare_ids(self, file):
         if self.id != "0":
             file.write(f"state {self.id} <<choice>>\n")
+            file.write(f"note left of {self.id} {COLORS[COLOR_INDEX]} : {self.condition}\n")
         for child in self.children:
             if isinstance(child, DecisionNode):
                 child.declare_ids(file)
@@ -159,12 +160,12 @@ class DecisionNode:
         for i in range(len(self.children)):
                 target = target_id(i)
                 if i > 0:
-                    file.write(f"{state} {line} {target} : else..\n")
+                    file.write(f"{state} {line} {target} : $failure(\"FALSE\")\n")
                 else:
                     if isinstance(self.parent, OnEventFunc):
-                        file.write(f"{state} {bold_line} {target} \nnote on link\n    {event}\nend note\n")
+                        file.write(f"{state} {bold_line} {target} \nnote on link\n    __**{event}**__\nend note\n")
                     else:
-                        file.write(f"{state} {line} {target} : {event}\n")
+                        file.write(f"{state} {line} {target} : $success(\"TRUE\")\n")
                 state = target
                 if isinstance(self.children[i], DecisionNode):
                     self.children[i].print_uml(file, orginal_state)
@@ -283,11 +284,7 @@ class OnEventFunc:
         self.root.declare_ids(f)
 
     def print_uml(self, f):
-        global COLORS
-        global COLOR_INDEX
-
         self.root.print_uml(f, self.state)
-        COLOR_INDEX = (COLOR_INDEX + 1) % len(COLORS)
 
 
 def get_state_event_from_func_decl(line: str):
@@ -311,14 +308,19 @@ def parse():
     return functions
 
 def output_uml(file_name, functions):
+    global COLOR_INDEX
     with open(file_name, "w") as f:
         f.write("@startuml\n")
+        f.write("!theme aws-orange\n")
         for func in functions:
             func.declare(f)
             f.write("\n\n")
+            COLOR_INDEX = (COLOR_INDEX + 1) % len(COLORS)
+        COLOR_INDEX = 0
         for func in functions:
             func.print_uml(f)
             f.write("\n")
+            COLOR_INDEX = (COLOR_INDEX + 1) % len(COLORS)
 
         f.write("\n@enduml")
 
