@@ -311,7 +311,7 @@ def output_uml(file_name, functions):
     global COLOR_INDEX
     with open(file_name, "w") as f:
         f.write("@startuml\n")
-        f.write("!theme aws-orange\n")
+        f.write("!theme spacelab\n")
         for func in functions:
             func.declare(f)
             f.write("\n\n")
