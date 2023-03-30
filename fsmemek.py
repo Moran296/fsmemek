@@ -333,7 +333,7 @@ with open(FILE, 'r') as f:
     LINES = f.readlines()
     print(f"parsing FILE: {FILE}")
     functions = parse()
-    output_uml(f"{FILE.replace('cpp', 'uml')}", functions)
+    output_uml(f"{FILE.split('/')[-1].replace('cpp', 'uml')}", functions)
 
 
 
