@@ -69,5 +69,5 @@ some SOME::on_event(STATE_A &, const EVENT_D &state) {
 
 will generate the following uml file:
 
-WIP
+![example_graph](https://github.com/Moran296/fsmemek/blob/master/example/example_graph.png)
 
