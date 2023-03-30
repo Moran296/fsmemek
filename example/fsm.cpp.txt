@@ -1,7 +1,7 @@
-return_state class::on_event(STATE_A s_a, EVENT_D& e_a) {
+return_state class::on_event(STATE_A s_a, EVENT_B& e_a) {
 
-   if(oneliner)
-      return STATE_ONE_LINER{};
+   if(is_oneliner)
+      return std::nullopt;
 
    return SOMETHING_TRENARY
                            ? STATE_A{}
@@ -14,51 +14,23 @@ return_state class::on_event(STATE_B& s_a, EVENT_A& e_a)
       return STATE_A{};
    }
 
-   if (masheu) {
+   if (some_more_ifs) {
       return STATE_A{};
    } else if (some_other_condition_number) {
-      return STATE_B{};
+      return std::nullopt;
    } else {
       return STATE_C{};
    }
 }
-
 
 return_state class::on_event(STATE_A s_a, EVENT_A& e_a) {
 
    return STATE_B{};
 }
 
+some SOME::on_event(STATE_A &, const EVENT_D &state) {
 
-return_state class::on_event(STATE_A& s_a, EVENT_B& e_a)
-{
-   return something > 0 ? std::nullopt : STATE_B{};
-}
-
-
-return_state class::on_event(STATE_B& s_a, EVENT_C& e_a)
-{
-
-   if (some_irrelevant) {
-      ......
-      .....
-   }
-
-   if (some_some) {
-      if (some_inside)
-      {
-         return STATE_A{};
-      }
-
-      return STATE_B{};
-   }
-
-   return std::nullopt;
-}
-
-some SOME::on_event(STATE_A &, const EVENT_CASE &state) {
-
-    switch (something) {
+    switch (var) {
     case big:
         return STATE_C{};
     case medium:
@@ -69,11 +41,8 @@ some SOME::on_event(STATE_A &, const EVENT_CASE &state) {
         return STATE_D{};
 
     default:
-      return STATE_G{};
+      return std::nullopt;
     }
 
 }
-
-
-
 

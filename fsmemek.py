@@ -145,8 +145,8 @@ class DecisionNode:
 
         state = self.parent.state if isinstance(self.parent, OnEventFunc) else self.id
         event = self.parent.event if isinstance(self.parent, OnEventFunc) else self.condition
-        line = f"-[{COLORS[COLOR_INDEX]}]->"
-        bold_line = f"-[bold,{COLORS[COLOR_INDEX]}]->"
+        bold_line = f"-[{COLORS[COLOR_INDEX]}]->"
+        line = f"-[bold,{COLORS[COLOR_INDEX]}]->"
 
         def target_id(i):
             if isinstance(self.children[i], ReturnedState):
